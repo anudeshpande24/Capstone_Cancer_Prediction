@@ -2,10 +2,6 @@
 
 **Data Science Capstone Project** by Anagha Deshpande, Thanya Mysore Santhosh, and Melissa Rejuan.
 
----
-
-## Project Description
-
 This project is an end-to-end breast cancer prediction system that combines clinical and genomic data to support cancer diagnosis, risk stratification, and survival analysis. Using the METABRIC dataset as the primary data source (with the Wisconsin Breast Cancer dataset as a feature reference), we build a full-stack pipeline — from data ingestion and preprocessing through machine learning modeling to an interactive web dashboard.
 
 The system addresses three core prediction tasks:
@@ -63,53 +59,7 @@ Open `metabric_exploration.ipynb` in Jupyter Notebook or VS Code and run all cel
 ```bash
 jupyter notebook metabric_exploration.ipynb
 ```
-
 ---
-
-## Dependencies
-
-All required packages are listed in `requirements.txt`. Key libraries:
-
-| Package | Purpose |
-|---|---|
-| `pandas`, `numpy` | Data manipulation and numerical computing |
-| `matplotlib`, `seaborn` | Data visualization |
-| `scikit-learn` | Classification, risk stratification, evaluation |
-| `lifelines` | Survival analysis (Kaplan-Meier, Cox PH) |
-| `xgboost` | Gradient boosting models |
-| `streamlit` | Interactive frontend dashboard |
-| `fastapi`, `uvicorn` | Backend REST API |
-| `sqlalchemy` | Database ORM (PostgreSQL / SQLite) |
-| `jupyter` | Notebook environments |
-
-Install everything at once:
-
-```bash
-pip install -r requirements.txt
-```
-
----
-
-## Project Structure
-
-```
-Capstone_Cancer_Prediction/
-├── Breast Cancer METABRIC.csv      # Raw METABRIC dataset
-├── clean_metabric.csv              # Cleaned dataset
-├── metabric_exploration.ipynb      # EDA and modeling notebook
-├── requirements.txt                # Python dependencies
-└── README.md                       # Project documentation
-```
-
-> **Planned directories** (as development progresses):
-> `models/` — saved model artifacts,
-> `api/` — FastAPI backend,
-> `dashboard/` — Streamlit app,
-> `data/` — raw and processed datasets,
-> `tests/` — unit and integration tests
-
----
-
 ## Analysis & Key Results
 
 ### Data Cleaning
