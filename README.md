@@ -115,4 +115,3 @@ Estimates patient survival probability over time.
 | Backend API | FastAPI / Flask | Serve model predictions via REST endpoints |
 | Frontend Dashboard | Streamlit | Interactive UI for clinicians to input patient data and view predictions |
 | Storage | PostgreSQL / SQLite | Persist patient records, predictions, and evaluation logs |
-| Monitoring | Custom dashboards | Track accuracy, C-index, calibration, and error alerts over time |
