@@ -2,7 +2,7 @@
 
 **Data Science Capstone Project** by Anagha Deshpande, Thanya Mysore Santhosh, and Melissa Rejuan.
 
-This project is an end-to-end breast cancer prediction system that combines clinical and genomic data to support cancer diagnosis, risk stratification, and survival analysis. Using the METABRIC dataset as the primary data source (with the Wisconsin Breast Cancer dataset as a feature reference), we build a full-stack pipeline — from data ingestion and preprocessing through machine learning modeling to an interactive web dashboard.
+This project is an end-to-end breast cancer prediction system that combines clinical and genomic data to support cancer diagnosis, risk stratification, and survival analysis. Using the METABRIC dataset and the Wisconsin Breast Cancer dataset, we build a full-stack pipeline — from data ingestion and preprocessing through machine learning modeling to an interactive web dashboard.
 
 The system addresses three core prediction tasks:
 
