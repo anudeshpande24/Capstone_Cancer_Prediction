@@ -1,43 +1,71 @@
 # Breast Cancer Prediction
 
-**Data Science Capstone Project** by Anagha Deshpande, Thanya Mysore Santhosh, and Melissa Rejuan.
+**Data Science Capstone Project**
 
-This project is an end-to-end breast cancer prediction system that combines clinical and genomic data to support cancer diagnosis, risk stratification, and survival analysis. Using the METABRIC dataset and the Wisconsin Breast Cancer dataset, we build a full-stack pipeline — from data ingestion and preprocessing through machine learning modeling to an interactive web dashboard.
+**Team Members:** Anagha Deshpande, Thanya Mysore Santhosh, and Melissa Rejuan
 
-The system addresses three core prediction tasks:
+---
 
-1. **Binary Classification** — Benign vs. Malignant tumor prediction
-2. **Risk Stratification** — Categorizing patients into Low / Medium / High risk groups
-3. **Survival Analysis** — Time-to-event modeling of patient outcomes
+## Problem Statement & Objectives
+
+Breast cancer is one of the most prevalent cancers worldwide, and early, accurate assessment of tumor malignancy and patient risk significantly improves treatment outcomes. This project builds an end-to-end breast cancer prediction system that uses clinical and genomic data to support three core tasks:
+
+1. **Binary Classification** — Predict whether a tumor is benign or malignant
+2. **Risk Stratification** — Assign patients to Low / Medium / High risk categories
+3. **Survival Analysis** — Model time-to-event patient outcomes
 
 The goal is to deliver an interpretable, deployable prediction platform that could support clinical decision-making in breast cancer treatment planning.
 
 ---
 
-## Data Sources
+## Datasets
 
-| Dataset | Role | Link |
+| Dataset | Role | Source |
 |---|---|---|
-| **METABRIC** (CSV / API) | Primary dataset | [Kaggle](https://www.kaggle.com/datasets/gunesevitan/breast-cancer-metabric) · [cBioPortal](https://www.cbioportal.org/) |
-| **Wisconsin Breast Cancer** | Feature reference for binary classification baseline | [UCI ML Repository](https://archive.ics.uci.edu/dataset/17/breast+cancer+wisconsin+diagnostic) |
+| **METABRIC** | Primary dataset — risk stratification & survival analysis | [Kaggle](https://www.kaggle.com/datasets/gunesevitan/breast-cancer-metabric) · [cBioPortal](https://www.cbioportal.org/) |
+| **Wisconsin Breast Cancer (WBCD)** | Binary classification | [UCI ML Repository](https://archive.ics.uci.edu/dataset/17/breast+cancer+wisconsin+diagnostic) |
 
-### Dataset Description
+### METABRIC
+- **Size:** 2,509 patients x 32 columns (after cleaning)
+- **Key features:**
+  - *Demographics:* Age at Diagnosis, Inferred Menopausal State
+  - *Tumor characteristics:* Tumor Size, Tumor Stage, Neoplasm Histologic Grade, Cellularity
+  - *Molecular markers:* ER Status, HER2 Status, PR Status, Pam50 + Claudin-low subtype, 3-Gene Classifier Subtype
+  - *Treatment:* Type of Breast Surgery, Chemotherapy, Hormone Therapy, Radio Therapy
+  - *Outcomes:* Overall Survival (Months), Relapse Free Status, Patient's Vital Status
+- **Challenges:** ~30% missingness in 3-Gene Classifier Subtype and Tumor Stage; class imbalance in vital status
 
-| Source | Size | Variables | Challenges |
-|---|---|---|---|
-| Molecular Taxonomy of Breast Cancer International Consortium (METABRIC) database. Publicly available on the cBioPortal for Cancer Genomics. | 32 columns. Each row is a clinical profile of 2,509 breast cancer patients. | A mix of continuous variables (such as radius, texture, and area measurements), categorical variables (such as diagnosis-related descriptors), and boolean indicators. | Null values, class imbalance (e.g. Cancer Type Detection). |
-
-**Key features include:**
-
-- **Demographics:** Age at Diagnosis, Inferred Menopausal State
-- **Tumor characteristics:** Tumor Size, Tumor Stage, Neoplasm Histologic Grade, Cellularity
-- **Molecular markers:** ER Status, HER2 Status, PR Status, Pam50 + Claudin-low subtype, 3-Gene Classifier Subtype
-- **Treatment:** Type of Breast Surgery, Chemotherapy, Hormone Therapy, Radio Therapy
-- **Outcomes:** Overall Survival (Months), Relapse Free Status, Patient's Vital Status
+### WBCD
+- **Size:** 569 samples x 30 numeric features + binary target (benign/malignant)
+- **Key features:** Cell nucleus measurements (radius, texture, perimeter, area, smoothness, etc.)
+- **Challenges:** Moderate class imbalance (~63% benign, ~37% malignant)
 
 ---
 
-## Getting Started
+## Methods & Models
+
+### Model A -- Binary Classification (`models/binary_classification.ipynb`)
+Classifies tumors as benign or malignant using the WBCD dataset.
+- Logistic Regression (baseline)
+- Calibrated Random Forest (primary model -- saved as `models/model_a.pkl`)
+- Train/validation/test split: 70% / 15% / 15%, stratified
+- **Metrics:** ROC-AUC, PR-AUC, Precision, Recall, F1-score, Confusion Matrix
+
+### Model B -- Risk Stratification (`models/risk.ipynb`)
+Assigns patients to Low / Medium / High risk tiers using the METABRIC dataset.
+- XGBoost classifier
+- Risk buckets derived from predicted probability: Low (<0.33), Medium (0.33-0.66), High (>0.66)
+- **Metrics:** Accuracy, Classification Report, Confusion Matrix
+
+### Model C -- Survival Analysis (`models/survival_analysis.ipynb`)
+Estimates patient survival probability over time using the METABRIC dataset.
+- Kaplan-Meier estimator
+- Cox Proportional Hazards model
+- **Metrics:** C-index (concordance), Calibration curves
+
+---
+
+## How to Run
 
 ### 1. Clone the Repository
 
@@ -52,66 +80,57 @@ cd Capstone_Cancer_Prediction
 pip install -r requirements.txt
 ```
 
-### 3. Run the Notebook
-
-Open `metabric_exploration.ipynb` in Jupyter Notebook or VS Code and run all cells:
+### 3. Run EDA Notebooks
 
 ```bash
-jupyter notebook metabric_exploration.ipynb
+jupyter notebook eda/metabric_exploration.ipynb
+jupyter notebook eda/wbcd_exploration.ipynb
 ```
----
-## Analysis & Key Results
 
-### Data Cleaning
+### 4. Run Modeling Notebooks
 
-- Removed the redundant `Sex` column (all patients are female) and the uniform `Cancer Type` column.
-- Identified and assessed missing values across features; notable missingness in mutation count and certain molecular markers.
-- Dropped duplicate records to ensure data integrity.
+Run in the following order to ensure cleaned data and saved models are available:
 
-### Exploratory Data Analysis
+```bash
+jupyter notebook models/binary_classification.ipynb
+jupyter notebook models/risk.ipynb
+jupyter notebook models/survival_analysis.ipynb
+```
 
-- **Surgery type distribution:** Mastectomy is the most common procedure, followed by Breast Conserving surgery; a subset of records have missing surgery information.
-- **Age at Diagnosis:** Roughly normally distributed with the majority of patients diagnosed between ages 40–75.
-- **Vital Status:** The dataset is imbalanced — more patients are classified as "Living" than "Died of Disease" or "Died of Other Causes."
-- **Tumor Stage vs. Vital Status:** Higher tumor stages (3–4) show a proportionally greater number of disease-related deaths compared to earlier stages.
-- **Correlation analysis:** A heatmap of numerical features reveals relationships between tumor size, lymph nodes examined positive, Nottingham prognostic index, and survival outcomes.
-- **Missing data profile:** Visualized missingness across all features to guide imputation strategy.
-
-### Core Models (In Progress)
-
-#### Model A: Binary Classification (Benign vs. Malignant)
-
-Classifies tumors as benign or malignant using clinical features.
-
-- Logistic Regression (baseline)
-- Random Forest
-- XGBoost
-- Support Vector Machine (SVM)
-- **Metrics:** Accuracy, Precision, Recall, F1-score, AUC-ROC
-
-#### Model B: Risk Stratification (Low / Medium / High)
-
-Assigns patients to risk tiers based on tumor characteristics and molecular markers.
-
-- Multi-class Logistic Regression
-- Gradient Boosting (XGBoost)
-- Random Forest
-- **Metrics:** Accuracy, Macro F1-score, Confusion Matrix
-
-#### Model C: Survival Analysis (Time-to-Event)
-
-Estimates patient survival probability over time.
-
-- Kaplan-Meier estimator
-- Cox Proportional Hazards model
-- **Metrics:** C-index (concordance), Calibration curves
+> **Note:** All notebooks read data from the `data/` folder using relative paths (e.g. `../data/clean_WBCD.csv`). Open them directly in VS Code or run Jupyter from the `models/` directory.
 
 ---
 
-## Application Layer (Next Steps)
+## Assumptions & Limitations
 
-| Component | Technology | Purpose |
-|---|---|---|
-| Backend API | FastAPI / Flask | Serve model predictions via REST endpoints |
-| Frontend Dashboard | Streamlit | Interactive UI for clinicians to input patient data and view predictions |
-| Storage | PostgreSQL / SQLite | Persist patient records, predictions, and evaluation logs |
+- **Missing data** in METABRIC (up to ~30% in some columns) is handled via imputation within model pipelines; records are not dropped outright.
+- **Class imbalance** in both datasets is addressed using `class_weight="balanced"` and calibrated classifiers.
+- The WBCD dataset serves as a clean baseline for binary classification and does not reflect the full clinical complexity of the METABRIC dataset.
+- Risk buckets for Model B use fixed probability thresholds (0.33 / 0.66), which are heuristic and would require clinical validation before any real-world deployment.
+- `Overall Survival Months` is excluded from risk stratification features to prevent data leakage.
+
+---
+
+## Current Progress & Next Steps
+
+### Completed
+- [x] Data ingestion and folder structure setup (`data/`, `eda/`, `models/`)
+- [x] Data cleaning for METABRIC and WBCD datasets
+- [x] EDA for both datasets
+- [x] Model A: Binary classification pipeline implemented
+- [x] Model B: Risk stratification pipeline implemented
+
+### In Progress / Next Steps
+- [ ] Complete Model C: Survival analysis — Kaplan-Meier curves, Cox PH model evaluation, and result visualizations
+- [ ] Finalize evaluation metrics and threshold tuning for Models B and C
+- [ ] Build and connect the `webapp/` layer (Streamlit or FastAPI)
+
+**Data Science Capstone Project** by Anagha Deshpande, Thanya Mysore Santhosh, and Melissa Rejuan.
+
+This project is an end-to-end breast cancer prediction system that combines clinical and genomic data to support cancer diagnosis, risk stratification, and survival analysis. Using the METABRIC dataset and the Wisconsin Breast Cancer dataset, we build a full-stack pipeline — from data ingestion and preprocessing through machine learning modeling to an interactive web dashboard.
+
+The system addresses three core prediction tasks:
+
+1. **Binary Classification** — Benign vs. Malignant tumor prediction
+2. **Risk Stratification** — Categorizing patients into Low / Medium / High risk groups
+3. **Survival Analysis** — Time-to-event modeling of patient outcomes
