@@ -108,7 +108,7 @@ Estimates patient survival probability over time.
 
 ---
 
-## Application Layer (Planned)
+## Application Layer (Next Steps)
 
 | Component | Technology | Purpose |
 |---|---|---|
