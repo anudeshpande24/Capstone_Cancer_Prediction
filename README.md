@@ -44,20 +44,20 @@ The goal is to deliver an interpretable, deployable prediction platform that cou
 
 ## Methods & Models
 
-### Model A -- Binary Classification (`models/binary_classification.ipynb`)
+### Task A -- Binary Classification (`models/binary_classification.ipynb`)
 Classifies tumors as benign or malignant using the WBCD dataset.
 - Logistic Regression (baseline)
-- Calibrated Random Forest (primary model -- saved as `models/model_a.pkl`)
+- Calibrated Random Forest
 - Train/validation/test split: 70% / 15% / 15%, stratified
 - **Metrics:** ROC-AUC, PR-AUC, Precision, Recall, F1-score, Confusion Matrix
 
-### Model B -- Risk Stratification (`models/risk.ipynb`)
+### Task B -- Risk Stratification (`models/risk.ipynb`)
 Assigns patients to Low / Medium / High risk tiers using the METABRIC dataset.
 - XGBoost classifier
 - Risk buckets derived from predicted probability: Low (<0.33), Medium (0.33-0.66), High (>0.66)
 - **Metrics:** Accuracy, Classification Report, Confusion Matrix
 
-### Model C -- Survival Analysis (`models/survival_analysis.ipynb`)
+### Task C -- Survival Analysis (`models/survival_analysis.ipynb`)
 Estimates patient survival probability over time using the METABRIC dataset.
 - Kaplan-Meier estimator
 - Cox Proportional Hazards model
@@ -124,13 +124,3 @@ jupyter notebook models/survival_analysis.ipynb
 - [ ] Complete Model C: Survival analysis — Kaplan-Meier curves, Cox PH model evaluation, and result visualizations
 - [ ] Finalize evaluation metrics and threshold tuning for Models B and C
 - [ ] Build and connect the `webapp/` layer (Streamlit or FastAPI)
-
-**Data Science Capstone Project** by Anagha Deshpande, Thanya Mysore Santhosh, and Melissa Rejuan.
-
-This project is an end-to-end breast cancer prediction system that combines clinical and genomic data to support cancer diagnosis, risk stratification, and survival analysis. Using the METABRIC dataset and the Wisconsin Breast Cancer dataset, we build a full-stack pipeline — from data ingestion and preprocessing through machine learning modeling to an interactive web dashboard.
-
-The system addresses three core prediction tasks:
-
-1. **Binary Classification** — Benign vs. Malignant tumor prediction
-2. **Risk Stratification** — Categorizing patients into Low / Medium / High risk groups
-3. **Survival Analysis** — Time-to-event modeling of patient outcomes
