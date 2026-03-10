@@ -42,6 +42,24 @@ The goal is to deliver an interpretable, deployable prediction platform that cou
 
 ---
 
+## EDA Findings
+
+### METABRIC (`eda/metabric_exploration.ipynb`)
+- **Age at diagnosis** is approximately normally distributed, centered around 55–65 years
+- **Tumor Stage 2** is the most common stage, followed by Stage 1; Stages 3–4 are less frequent
+- **Invasive Ductal Carcinoma** is the dominant cancer subtype, followed by Invasive Lobular Carcinoma
+- **Surgery type** is nearly split between Mastectomy (~1,000 cases) and Breast Conserving (~950 cases), with ~550 missing
+- **Vital status** is imbalanced: most patients are living, followed by died of disease, then died of other causes
+- **Correlations:** Nottingham prognostic index correlates positively with Tumor Size and Lymph nodes examined positive; Overall Survival Months and Relapse Free Status Months are strongly correlated with each other; most other feature pairs show low multicollinearity
+
+### WBCD (`eda/wbcd_exploration.ipynb`)
+- **No missing values** and no duplicates confirmed across all 569 samples
+- **Class distribution:** 62.7% benign, 37.3% malignant — a mild imbalance addressed with `class_weight="balanced"`
+- **Feature distributions:** Area and size features (radius, perimeter, area) are right-skewed; most features differ meaningfully between benign and malignant cases
+- **Correlations:** Radius, perimeter, and area are highly correlated with each other; `_worst` variants (worst-case cell measurements) tend to be stronger discriminators than `_mean` variants
+
+---
+
 ## Methods & Models
 
 ### Task A -- Binary Classification (`models/binary_classification.ipynb`)
