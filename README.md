@@ -78,7 +78,6 @@ Assigns patients to Low / Medium / High risk tiers using the METABRIC dataset.
 ### Task C -- Survival Analysis (`models/survival_analysis.ipynb`)
 Estimates patient survival probability over time using the METABRIC dataset.
 - **Right censoring** accounted for: patients still living or not recurred at study end are treated as censored (event = 0), meaning we know they hadn't experienced the event yet but don't know if/when they will
-- Kaplan-Meier estimator
 - Cox Proportional Hazards model with 5-fold cross-validation
 - Evaluated on both Overall Survival and Relapse-Free Status outcomes
 - **Metrics:** C-index (concordance), time-dependent ROC-AUC at 12, 24, and 36 months
@@ -169,6 +168,6 @@ jupyter notebook models/survival_analysis.ipynb
 - [x] Model B: Risk stratification pipeline implemented and evaluated
 
 ### In Progress / Next Steps
-- [ ] Complete Model C: Survival analysis — Cox PH model evaluation, threshold tuning, and result visualizations
+- [ ] Complete Model C: Survival analysis — add Kaplan-Meier estimator, finalize Cox PH result visualizations
 - [ ] Finalize evaluation metrics and threshold tuning for Models B and C
 - [ ] Build and connect the `webapp/` layer (Streamlit or FastAPI)
