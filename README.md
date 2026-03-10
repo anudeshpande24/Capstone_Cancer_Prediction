@@ -59,6 +59,7 @@ Assigns patients to Low / Medium / High risk tiers using the METABRIC dataset.
 
 ### Task C -- Survival Analysis (`models/survival_analysis.ipynb`)
 Estimates patient survival probability over time using the METABRIC dataset.
+- **Right censoring** accounted for: patients still living or not recurred at study end are treated as censored (event = 0), meaning we know they hadn't experienced the event yet but don't know if/when they will
 - Kaplan-Meier estimator
 - Cox Proportional Hazards model with 5-fold cross-validation
 - Evaluated on both Overall Survival and Relapse-Free Status outcomes
