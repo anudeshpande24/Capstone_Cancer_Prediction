@@ -11,7 +11,8 @@ router = APIRouter(prefix="/data", tags=["data"])
 def _load(path: Path) -> pd.DataFrame:
     if not path.exists():
         raise HTTPException(status_code=404, detail=f"File not found: {path}")
-    return pd.read_csv(path)
+    df = pd.read_csv(path)
+    return df.astype(object).where(pd.notnull(df), None)
 
 
 @router.get("/wbcd")
