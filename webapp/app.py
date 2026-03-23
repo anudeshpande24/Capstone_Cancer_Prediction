@@ -1,8 +1,17 @@
 import streamlit as st
-from utils.data_loader import load_wbcd, load_metabric
+from utils.data_loader import load_wbcd, load_metabric, api_health
 
 st.set_page_config(page_title="Cancer Prediction Platform", layout="wide")
 st.title("Breast Cancer Clinical Decision Support")
+
+# ── API health check ──────────────────────────────────────────────────────────
+if api_health():
+    st.success("API connected — http://localhost:8000")
+else:
+    st.error("Cannot reach API. Run: uvicorn backend.main:app --reload --port 8000")
+    st.stop()
+
+st.divider()
 
 # ── WBCD ──────────────────────────────────────────────────────────────────────
 st.header("Dataset A: Wisconsin Breast Cancer Diagnostic (WBCD)")
