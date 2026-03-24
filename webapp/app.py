@@ -76,9 +76,9 @@ with st.sidebar:
     st.divider()
     st.markdown("**Navigation**")
     st.markdown("- Data Overview ← you are here")
-    st.markdown("- Diagnosis (coming soon)")
-    st.markdown("- Risk Stratification (coming soon)")
-    st.markdown("- Survival Analysis (coming soon)")
+    st.markdown("- [Diagnosis](Diagnosis)")
+    st.markdown("- [Risk Stratification](Risk_Stratification)")
+    st.markdown("- [Survival Analysis](Survival_Analysis)")
     st.divider()
     st.markdown("<small>Capstone Project · DS 2026</small>", unsafe_allow_html=True)
 
