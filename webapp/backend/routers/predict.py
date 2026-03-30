@@ -41,6 +41,19 @@ def survival_schema():
     }
 
 
+# ─── Metrics endpoint ──────────────────────────────────────────────────────────
+
+@router.get("/metrics")
+def get_metrics():
+    result = {}
+    for key, loader in [("model_a", get_model_a), ("model_b", get_model_b), ("model_c", get_model_c)]:
+        try:
+            result[key] = loader().get("metrics")
+        except Exception:
+            result[key] = None
+    return result
+
+
 # ─── Prediction endpoints ──────────────────────────────────────────────────────
 
 @router.post("/diagnosis")

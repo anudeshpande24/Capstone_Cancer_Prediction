@@ -19,8 +19,13 @@ from sklearn.calibration import CalibratedClassifierCV
 from sklearn.compose import ColumnTransformer
 from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import OneHotEncoder
+from sklearn.metrics import (
+    accuracy_score, precision_score, recall_score, f1_score,
+    roc_auc_score, confusion_matrix,
+)
 from xgboost import XGBClassifier
 from lifelines import CoxPHFitter
+from lifelines.utils import concordance_index
 
 ROOT = Path(__file__).parent
 MODELS_DIR = ROOT / "models"
@@ -56,6 +61,18 @@ rf = Pipeline([
 rf_calibrated = CalibratedClassifierCV(rf, method="isotonic", cv=5)
 rf_calibrated.fit(X_train_a, y_train_a)
 
+y_pred_a  = rf_calibrated.predict(X_test_a)
+y_proba_a = rf_calibrated.predict_proba(X_test_a)[:, 1]
+metrics_a = {
+    "accuracy":  float(accuracy_score(y_test_a, y_pred_a)),
+    "precision": float(precision_score(y_test_a, y_pred_a)),
+    "recall":    float(recall_score(y_test_a, y_pred_a)),
+    "f1":        float(f1_score(y_test_a, y_pred_a)),
+    "roc_auc":   float(roc_auc_score(y_test_a, y_proba_a)),
+    "confusion_matrix": confusion_matrix(y_test_a, y_pred_a).tolist(),
+    "test_size": int(len(y_test_a)),
+}
+
 feature_stats_a = {
     col: {
         "min": float(X_a[col].min()),
@@ -66,7 +83,12 @@ feature_stats_a = {
 }
 
 joblib.dump(
-    {"model": rf_calibrated, "features": X_a.columns.tolist(), "feature_stats": feature_stats_a},
+    {
+        "model": rf_calibrated,
+        "features": X_a.columns.tolist(),
+        "feature_stats": feature_stats_a,
+        "metrics": metrics_a,
+    },
     MODELS_DIR / "model_a.pkl",
 )
 print(f"  Saved models/model_a.pkl  ({len(X_a.columns)} features)")
@@ -128,6 +150,17 @@ xgb = XGBClassifier(
 model_b = Pipeline(steps=[("preprocess", preprocess_b), ("model", xgb)])
 model_b.fit(X_train_b, y_train_b)
 
+y_pred_b = model_b.predict(X_test_b)
+labels_b  = ["Low", "Medium", "High"]
+f1_per_b  = f1_score(y_test_b, y_pred_b, average=None, labels=[0, 1, 2])
+metrics_b = {
+    "accuracy":    float(accuracy_score(y_test_b, y_pred_b)),
+    "f1_weighted": float(f1_score(y_test_b, y_pred_b, average="weighted")),
+    "f1_per_class": {labels_b[i]: float(f1_per_b[i]) for i in range(3)},
+    "confusion_matrix": confusion_matrix(y_test_b, y_pred_b, labels=[0, 1, 2]).tolist(),
+    "test_size": int(len(y_test_b)),
+}
+
 cat_options_b = {c: sorted(str(v) for v in X_b[c].dropna().unique()) for c in cat_cols_b}
 num_stats_b = {
     c: {"min": float(X_b[c].min()), "max": float(X_b[c].max()), "median": float(X_b[c].median())}
@@ -143,6 +176,7 @@ joblib.dump(
         "cat_options": cat_options_b,
         "num_stats": num_stats_b,
         "label_map": {0: "Low", 1: "Medium", 2: "High"},
+        "metrics": metrics_b,
     },
     MODELS_DIR / "model_b.pkl",
 )
@@ -312,6 +346,25 @@ cph_rfs.fit(
 
 defaults_c = {col: float(df_c[col].median()) for col in covariates}
 
+_, df_test_c = train_test_split(
+    df_c, test_size=0.2, stratify=df_c["Cancer Type Detailed"], shuffle=True, random_state=0
+)
+c_index_os = concordance_index(
+    df_test_c["Overall Survival (Months)"],
+    -cph_os.predict_partial_hazard(df_test_c[covariates]),
+    df_test_c["Overall Survival Status"],
+)
+c_index_rfs = concordance_index(
+    df_test_c["Relapse Free Status (Months)"],
+    -cph_rfs.predict_partial_hazard(df_test_c[covariates]),
+    df_test_c["Relapse Free Status"],
+)
+metrics_c = {
+    "c_index_os":  round(float(c_index_os), 4),
+    "c_index_rfs": round(float(c_index_rfs), 4),
+    "train_size":  int(len(df_train_c)),
+}
+
 joblib.dump(
     {
         "cph_os": cph_os,
@@ -321,6 +374,7 @@ joblib.dump(
         "defaults": defaults_c,
         "cat_options": cat_options_c,
         "evaluation_times": [12, 24, 36],
+        "metrics": metrics_c,
     },
     MODELS_DIR / "model_c.pkl",
 )
