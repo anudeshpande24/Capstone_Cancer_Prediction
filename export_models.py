@@ -30,7 +30,7 @@ MODELS_DIR.mkdir(exist_ok=True)
 # ─── MODEL A: Binary Classification (WBCD) ────────────────────────────────────
 print("Training Model A: Binary Classification (WBCD)...")
 
-df_a = pd.read_csv(ROOT / "WBCD_dataset.csv")
+df_a = pd.read_csv(ROOT / "data" / "WBCD_dataset.csv")
 df_a["diagnosis"] = df_a["diagnosis"].astype(str).str.strip().str.upper()
 df_a["target"] = df_a["diagnosis"].map({"R": 1, "N": 0})
 df_a = df_a.drop(
@@ -75,7 +75,7 @@ print(f"  Saved models/model_a.pkl  ({len(X_a.columns)} features)")
 # ─── MODEL B: Risk Stratification (METABRIC) ──────────────────────────────────
 print("Training Model B: Risk Stratification (METABRIC)...")
 
-df_b = pd.read_csv(ROOT / "Breast Cancer METABRIC.csv")
+df_b = pd.read_csv(ROOT / "data" / "Breast Cancer METABRIC.csv")
 df_b = df_b.drop_duplicates()
 
 df_b["Risk_Level"] = pd.qcut(
@@ -178,7 +178,7 @@ def safe_median(x, global_series=None):
     return x
 
 
-df_c = pd.read_csv(ROOT / "Breast Cancer METABRIC.csv")
+df_c = pd.read_csv(ROOT / "data" / "Breast Cancer METABRIC.csv")
 
 # Imputation (mirrors survival_analysis.ipynb exactly)
 df_c["Relapse Free Status"] = df_c.groupby("Cancer Type Detailed")["Relapse Free Status"].transform(

@@ -17,7 +17,7 @@ def _load(path: Path) -> pd.DataFrame:
 
 @router.get("/wbcd")
 def get_wbcd():
-    df = _load(ROOT / "WBCD_dataset.csv")
+    df = _load(ROOT / "data" / "WBCD_dataset.csv")
     return {
         "rows": len(df),
         "columns": len(df.columns),
@@ -28,7 +28,7 @@ def get_wbcd():
 
 @router.get("/metabric")
 def get_metabric():
-    df = _load(ROOT / "clean_metabric.csv")
+    df = _load(ROOT / "data" / "clean_metabric.csv")
     return {
         "rows": len(df),
         "columns": len(df.columns),
