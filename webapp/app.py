@@ -1,6 +1,8 @@
 import streamlit as st
 import requests
 import pandas as pd
+
+
 from utils.data_loader import load_wbcd, load_metabric, api_health
 from utils.theme import inject_theme
 
@@ -180,29 +182,145 @@ if page == "Data Overview":
         '<p>Explore the two clinical datasets powering the prediction models.</p></div>',
         unsafe_allow_html=True,
     )
-    col_a, col_b = st.columns(2, gap="large")
-    with col_a:
-        st.markdown('<p class="section-heading">Dataset A — WBCD</p>', unsafe_allow_html=True)
-        st.caption("Wisconsin Breast Cancer Diagnostic · Binary classification")
-        try:
-            wbcd = load_wbcd()
-            m1, m2 = st.columns(2)
-            m1.metric("Patients", f"{wbcd.shape[0]:,}")
-            m2.metric("Features", wbcd.shape[1])
-            st.table(wbcd.head(5))
-        except Exception as e:
-            st.error(f"Failed to load WBCD: {e}")
-    with col_b:
-        st.markdown('<p class="section-heading">Dataset B — METABRIC</p>', unsafe_allow_html=True)
-        st.caption("Molecular Taxonomy of Breast Cancer · Risk & survival")
-        try:
-            metabric = load_metabric()
-            m1, m2 = st.columns(2)
-            m1.metric("Patients", f"{metabric.shape[0]:,}")
-            m2.metric("Features", metabric.shape[1])
-            st.table(metabric.head(5))
-        except Exception as e:
-            st.error(f"Failed to load METABRIC: {e}")
+
+    # ── WBCD ──────────────────────────────────────────────────────────────────
+    st.markdown('<p class="section-heading">Wisconsin Breast Cancer Diagnostic</p>', unsafe_allow_html=True)
+    st.caption("569 patient samples · 30 cell nucleus measurements · Binary classification")
+    try:
+        wbcd = load_wbcd()
+        df_w = wbcd.copy()
+        if "diagnosis" in df_w.columns:
+            df_w["diagnosis"] = df_w["diagnosis"].astype(str).str.strip().str.upper()
+            dc_w = df_w["diagnosis"].value_counts()
+            n_benign    = int(dc_w.get("N", 0))
+            n_malignant = int(dc_w.get("R", 0))
+        else:
+            n_benign = n_malignant = 0
+        completeness_w = round((1 - df_w.isnull().mean().mean()) * 100, 1)
+        n_miss_w = int((df_w.isnull().sum() > 0).sum())
+
+        hw = st.columns(5)
+        hw[0].metric("Total Patients",    f"{len(df_w):,}")
+        hw[1].metric("Features",          df_w.shape[1])
+        hw[2].metric("Benign",            f"{n_benign} ({n_benign/len(df_w):.0%})")
+        hw[3].metric("Malignant",         f"{n_malignant} ({n_malignant/len(df_w):.0%})")
+        hw[4].metric("Data Completeness", f"{completeness_w}%")
+
+        tp_w, ts_w, td_w, tfi_w = st.tabs(["Data Preview", "Summary Statistics", "Distributions", "Feature Correlation"])
+
+        with tp_w:
+            st.caption(f"First 5 of {len(df_w):,} rows · {n_miss_w} columns with missing values")
+            st.table(df_w.head(5))
+
+        with ts_w:
+            st.caption("Descriptive statistics for all numeric features")
+            st.table(df_w.select_dtypes(include="number").describe().round(4))
+
+        with td_w:
+            col_d1, col_d2 = st.columns(2, gap="large")
+            with col_d1:
+                st.markdown("**Diagnosis Distribution**")
+                st.bar_chart(
+                    pd.DataFrame({"Patients": {"Benign": n_benign, "Malignant": n_malignant}}),
+                    color="#f43f7a",
+                )
+            with col_d2:
+                st.markdown("**Mean Feature Values (key measurements)**")
+                key_w = [c for c in ["radius_mean","texture_mean","perimeter_mean","area_mean","smoothness_mean","compactness_mean"] if c in df_w.columns]
+                if key_w:
+                    st.bar_chart(df_w[key_w].mean().rename("Mean Value"), color="#6366f1")
+
+        with tfi_w:
+            st.caption("Absolute Pearson correlation with malignancy — higher values indicate stronger predictive signal")
+            if "diagnosis" in df_w.columns:
+                df_w["_target"] = (df_w["diagnosis"] == "R").astype(int)
+                num_cols_w = [c for c in df_w.select_dtypes(include="number").columns if c != "_target"]
+                corr_w = df_w[num_cols_w].corrwith(df_w["_target"]).abs().sort_values(ascending=False).head(15)
+                st.bar_chart(corr_w.rename("|Correlation|"), color="#f43f7a")
+
+    except Exception as e:
+        st.error(f"Failed to load WBCD: {e}")
+
+    st.markdown("<div style='margin-bottom:32px'></div>", unsafe_allow_html=True)
+
+    # ── METABRIC ──────────────────────────────────────────────────────────────
+    st.markdown('<p class="section-heading">METABRIC (Molecular Taxonomy of Breast Cancer International Consortium)</p>', unsafe_allow_html=True)
+    st.caption("2,509 patients · Clinical, molecular & genomic features · Risk stratification & survival analysis")
+    try:
+        metabric = load_metabric()
+        df_m = metabric.copy()
+
+        n_deceased = n_living = 0
+        median_surv = None
+        if "Overall Survival Status" in df_m.columns:
+            sc = df_m["Overall Survival Status"].value_counts()
+            n_deceased = int(sc.get("Deceased", 0))
+            n_living   = int(sc.get("Living", 0))
+        if "Overall Survival (Months)" in df_m.columns:
+            median_surv = round(float(df_m["Overall Survival (Months)"].median()), 1)
+        completeness_m = round((1 - df_m.isnull().mean().mean()) * 100, 1)
+        n_miss_m = int((df_m.isnull().sum() > 0).sum())
+
+        hm = st.columns(5)
+        hm[0].metric("Total Patients",    f"{len(df_m):,}")
+        hm[1].metric("Features",          df_m.shape[1])
+        hm[2].metric("Deceased",          f"{n_deceased} ({n_deceased/len(df_m):.0%})" if len(df_m) else "—")
+        hm[3].metric("Median Survival",   f"{median_surv} mo" if median_surv else "—")
+        hm[4].metric("Data Completeness", f"{completeness_m}%")
+
+        tp_m, ts_m, td_m, tc_m = st.tabs(["Data Preview", "Summary Statistics", "Distributions", "Clinical Breakdown"])
+
+        with tp_m:
+            st.caption(f"First 5 of {len(df_m):,} rows · {n_miss_m} columns with missing values")
+            st.table(df_m.head(5))
+
+        with ts_m:
+            st.caption("Descriptive statistics for all numeric features")
+            st.table(df_m.select_dtypes(include="number").describe().round(4))
+
+        with td_m:
+            col_m1, col_m2 = st.columns(2, gap="large")
+            with col_m1:
+                st.markdown("**Overall Survival Status**")
+                if n_deceased or n_living:
+                    st.bar_chart(
+                        pd.DataFrame({"Patients": {"Living": n_living, "Deceased": n_deceased}}),
+                        color="#14b8a6",
+                    )
+            with col_m2:
+                st.markdown("**Age at Diagnosis Distribution**")
+                if "Age at Diagnosis" in df_m.columns:
+                    age_bins = pd.cut(df_m["Age at Diagnosis"].dropna(), bins=10)
+                    age_dist = age_bins.value_counts().sort_index()
+                    age_dist.index = [f"{int(i.left)}–{int(i.right)}" for i in age_dist.index]
+                    st.bar_chart(age_dist.rename("Patients"), color="#6366f1")
+
+        with tc_m:
+            col_c1, col_c2 = st.columns(2, gap="large")
+            with col_c1:
+                st.markdown("**Top Cancer Subtypes**")
+                if "Cancer Type Detailed" in df_m.columns:
+                    st.bar_chart(df_m["Cancer Type Detailed"].value_counts().head(8).rename("Patients"), color="#f43f7a")
+
+                st.markdown("**Tumor Stage Distribution**")
+                if "Tumor Stage" in df_m.columns:
+                    st.bar_chart(df_m["Tumor Stage"].value_counts().sort_index().rename("Patients"), color="#fbbf24")
+            with col_c2:
+                st.markdown("**Treatment Distribution**")
+                tx_counts = {}
+                for t in ["Chemotherapy", "Hormone Therapy", "Radio Therapy"]:
+                    if t in df_m.columns:
+                        yes = int(df_m[t].astype(str).str.strip().str.lower().isin(["yes","1"]).sum())
+                        tx_counts[t] = yes
+                if tx_counts:
+                    st.bar_chart(pd.Series(tx_counts).rename("Patients"), color="#14b8a6")
+
+                st.markdown("**PAM50 Molecular Subtype**")
+                if "Pam50 + Claudin-low subtype" in df_m.columns:
+                    st.bar_chart(df_m["Pam50 + Claudin-low subtype"].value_counts().head(7).rename("Patients"), color="#6366f1")
+
+    except Exception as e:
+        st.error(f"Failed to load METABRIC: {e}")
 
 # ── Diagnosis ─────────────────────────────────────────────────────────────────
 elif page == "Diagnosis":
@@ -242,9 +360,8 @@ elif page == "Diagnosis":
                     inputs_a[f] = cols[i % 3].number_input(
                         f, min_value=float(s["min"]), max_value=float(s["max"]),
                         value=float(s["mean"]), format="%.5f", key=f"a_{f}")
-            st.form_submit_button("Run Diagnosis", use_container_width=True)
-            submitted_a = True if st.session_state.get("_diag_run") else False
-        if st.session_state.get("_diag_submitted"):
+            submitted_a = st.form_submit_button("Run Diagnosis", use_container_width=False)
+        if submitted_a:
             with st.spinner("Analysing..."):
                 resp = requests.post(f"{API}/predict/diagnosis", json={"features": inputs_a}, timeout=15)
                 resp.raise_for_status()
@@ -299,7 +416,7 @@ elif page == "Risk Stratification":
                 for f in KEY_CAT_B:
                     if f in cat_opts_b:
                         inputs_b[f] = st.selectbox(f, options=cat_opts_b[f], key=f"b_{f}")
-            submitted_b = st.form_submit_button("Run Risk Stratification", use_container_width=True)
+            submitted_b = st.form_submit_button("Run Risk Stratification", use_container_width=False)
         if submitted_b:
             with st.spinner("Analysing..."):
                 resp = requests.post(f"{API}/predict/risk", json={"features": inputs_b}, timeout=15)
@@ -386,13 +503,72 @@ elif page == "Survival Analysis":
 elif page == "Model Metrics":
     st.markdown(
         '<div class="page-banner"><h3>Model Performance</h3>'
-        '<p>Held-out test set evaluation for all three models. '
-        'Re-run <code>python export_models.py</code> to refresh.</p></div>',
+        '<p>Held-out test set evaluation for all three models. ',
         unsafe_allow_html=True,
     )
+
+    def _metrics_html(items, color="#f43f7a"):
+        """items: list of (label, value 0-1) tuples"""
+        rows = ""
+        for label, value in items:
+            pct = round(value * 100, 1)
+            rows += (
+                f'<div style="margin-bottom:10px;">'
+                f'<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px;">'
+                f'<span style="font-size:0.78rem;font-weight:600;color:rgba(255,255,255,0.75);">{label}</span>'
+                f'<span style="font-size:0.9rem;font-weight:700;color:#ffffff;">{pct}%</span>'
+                f'</div>'
+                f'<div style="background:rgba(255,255,255,0.07);border-radius:100px;height:8px;overflow:hidden;">'
+                f'<div style="width:{pct}%;height:100%;border-radius:100px;'
+                f'background:linear-gradient(90deg,{color},{color}cc);'
+                f'box-shadow:0 0 8px {color}66;transition:width 0.4s ease;"></div>'
+                f'</div>'
+                f'</div>'
+            )
+        return f'<div style="padding:4px 0;">{rows}</div>'
+
+    def _cm_html(matrix, labels):
+        max_val = max(v for row in matrix for v in row) or 1
+        header_cells = "".join(
+            f'<th style="padding:10px 16px;text-align:center;color:#ffffff;font-size:0.72rem;'
+            f'font-weight:600;text-transform:uppercase;letter-spacing:0.07em;'
+            f'background:#0a1530;border-bottom:1px solid rgba(255,255,255,0.1);">Pred<br>{l}</th>'
+            for l in labels
+        )
+        rows_html = ""
+        for i, row_label in enumerate(labels):
+            cells = ""
+            for j, val in enumerate(matrix[i]):
+                intensity = val / max_val
+                if i == j:
+                    bg = f"rgba(244,63,122,{0.12 + intensity * 0.65:.2f})"
+                    color = "#ffffff"
+                else:
+                    bg = f"rgba(255,255,255,{0.02 + intensity * 0.12:.2f})"
+                    color = "rgba(255,255,255,0.55)"
+                cells += (
+                    f'<td style="padding:18px 16px;text-align:center;background:{bg};'
+                    f'color:{color};font-size:1.35rem;font-weight:700;'
+                    f'border:1px solid rgba(255,255,255,0.05);">{val}</td>'
+                )
+            rows_html += (
+                f'<tr>'
+                f'<th style="padding:10px 16px;text-align:right;color:#ffffff;font-size:0.72rem;'
+                f'font-weight:600;text-transform:uppercase;letter-spacing:0.07em;'
+                f'background:#0a1530;border-right:1px solid rgba(255,255,255,0.1);">'
+                f'Actual<br>{row_label}</th>{cells}</tr>'
+            )
+        return (
+            f'<table style="width:100%;border-collapse:collapse;border-radius:12px;overflow:hidden;">'
+            f'<tr><td style="background:#0a1530;border-bottom:1px solid rgba(255,255,255,0.1);'
+            f'border-right:1px solid rgba(255,255,255,0.1);"></td>{header_cells}</tr>'
+            f'{rows_html}</table>'
+        )
+
     try:
         all_m = get_all_metrics()
 
+        # ── Model A ───────────────────────────────────────────────────────────
         st.markdown(
             '<div class="model-header"><h4>Model A — Tumor Diagnosis</h4>'
             '<p>Calibrated Random Forest · WBCD · Binary classification</p></div>',
@@ -406,15 +582,37 @@ elif page == "Model Metrics":
             c3.metric("Recall",    f"{ma['recall']:.1%}")
             c4.metric("F1 Score",  f"{ma['f1']:.1%}")
             c5.metric("ROC-AUC",   f"{ma['roc_auc']:.3f}")
-            with st.expander("Confusion matrix"):
-                st.table(
-                    pd.DataFrame(ma["confusion_matrix"],
-                                 index=["Actual Benign", "Actual Malignant"],
-                                 columns=["Pred Benign", "Pred Malignant"]))
-                st.caption(f"Test set: {ma['test_size']} samples")
+
+            with st.expander("Metric definitions"):
+                st.markdown(
+                    '<div class="metric-glossary">'
+                    '<span><strong>Accuracy</strong> — overall % of correct predictions</span>'
+                    '<span><strong>Precision</strong> — of cases flagged malignant, % that truly are (low false-positive rate)</span>'
+                    '<span><strong>Recall</strong> — of all true malignancies, % the model caught (low false-negative rate)</span>'
+                    '<span><strong>F1 Score</strong> — harmonic mean of precision and recall; balances both concerns</span>'
+                    '<span><strong>ROC-AUC</strong> — probability that the model ranks a malignant case higher than a benign one (1.0 = perfect)</span>'
+                    '</div>',
+                    unsafe_allow_html=True,
+                )
+
+            col_va, col_cma = st.columns(2, gap="large")
+            with col_va:
+                st.markdown("**Classification Metrics**")
+                st.markdown(_metrics_html([
+                    ("Accuracy",  ma["accuracy"]),
+                    ("Precision", ma["precision"]),
+                    ("Recall",    ma["recall"]),
+                    ("F1 Score",  ma["f1"]),
+                    ("ROC-AUC",   ma["roc_auc"]),
+                ], color="#f43f7a"), unsafe_allow_html=True)
+            with col_cma:
+                st.markdown("**Confusion Matrix**")
+                st.markdown(_cm_html(ma["confusion_matrix"], ["Benign", "Malignant"]), unsafe_allow_html=True)
+            st.caption(f"Test set: {ma['test_size']} samples · Diagonal cells = correct predictions (darker = more)")
         else:
             st.warning("Model A metrics not available — re-run export_models.py")
 
+        # ── Model B ───────────────────────────────────────────────────────────
         st.markdown(
             '<div class="model-header"><h4>Model B — Risk Stratification</h4>'
             '<p>XGBoost · METABRIC · 3-class (Low / Medium / High)</p></div>',
@@ -429,16 +627,36 @@ elif page == "Model Metrics":
             c3.metric("F1 — Low",    f"{fpc['Low']:.1%}")
             c4.metric("F1 — Medium", f"{fpc['Medium']:.1%}")
             c5.metric("F1 — High",   f"{fpc['High']:.1%}")
-            with st.expander("Confusion matrix"):
-                labels = ["Low", "Medium", "High"]
-                st.table(
-                    pd.DataFrame(mb["confusion_matrix"],
-                                 index=[f"Actual {l}" for l in labels],
-                                 columns=[f"Pred {l}" for l in labels]))
-                st.caption(f"Test set: {mb['test_size']} samples")
+
+            with st.expander("Metric definitions"):
+                st.markdown(
+                    '<div class="metric-glossary">'
+                    '<span><strong>Accuracy</strong> — overall % of patients assigned the correct risk tier</span>'
+                    '<span><strong>F1 Weighted</strong> — F1 averaged across all three classes, weighted by class size; handles class imbalance</span>'
+                    '<span><strong>F1 per class</strong> — per-tier F1; a low score for "High" risk means the model struggles to identify the most critical patients</span>'
+                    '<span><strong>Confusion matrix</strong> — rows are true labels, columns are predictions; off-diagonal cells are misclassifications</span>'
+                    '</div>',
+                    unsafe_allow_html=True,
+                )
+
+            col_vb, col_cmb = st.columns(2, gap="large")
+            with col_vb:
+                st.markdown("**Classification Metrics**")
+                st.markdown(_metrics_html([
+                    ("Accuracy",    mb["accuracy"]),
+                    ("F1 Weighted", mb["f1_weighted"]),
+                    ("F1 — Low",    fpc["Low"]),
+                    ("F1 — Medium", fpc["Medium"]),
+                    ("F1 — High",   fpc["High"]),
+                ], color="#6366f1"), unsafe_allow_html=True)
+            with col_cmb:
+                st.markdown("**Confusion Matrix**")
+                st.markdown(_cm_html(mb["confusion_matrix"], ["Low", "Medium", "High"]), unsafe_allow_html=True)
+            st.caption(f"Test set: {mb['test_size']} samples · Diagonal cells = correct predictions (darker = more)")
         else:
             st.warning("Model B metrics not available — re-run export_models.py")
 
+        # ── Model C ───────────────────────────────────────────────────────────
         st.markdown(
             '<div class="model-header"><h4>Model C — Survival Analysis</h4>'
             '<p>Cox Proportional Hazards · METABRIC · Time-to-event</p></div>',
@@ -446,10 +664,32 @@ elif page == "Model Metrics":
         )
         mc = all_m.get("model_c")
         if mc:
-            c1, c2 = st.columns(2)
+            c1, c2, c3 = st.columns(3)
             c1.metric("C-index — Overall Survival",      f"{mc['c_index_os']:.3f}")
             c2.metric("C-index — Relapse-Free Survival", f"{mc['c_index_rfs']:.3f}")
-            st.caption(f"C-index: 0.5 = random, 1.0 = perfect · Training set: {mc['train_size']:,} patients")
+            c3.metric("Training Patients", f"{mc['train_size']:,}")
+
+            with st.expander("Metric definitions"):
+                st.markdown(
+                    '<div class="metric-glossary">'
+                    '<span><strong>C-index (Concordance index)</strong> — measures how well the model ranks patients by survival time. '
+                    '0.5 = no better than random chance; 1.0 = perfect ranking; values above 0.6 are considered clinically useful</span>'
+                    '<span><strong>Overall Survival C-index</strong> — discriminative ability for time until death</span>'
+                    '<span><strong>Relapse-Free Survival C-index</strong> — discriminative ability for time until cancer recurrence or death</span>'
+                    '</div>',
+                    unsafe_allow_html=True,
+                )
+
+            col_vc, _ = st.columns([1, 1])
+            with col_vc:
+                st.markdown("**C-index Comparison**")
+                st.markdown(_metrics_html([
+                    ("Random baseline",       0.5),
+                    ("Overall Survival",      mc["c_index_os"]),
+                    ("Relapse-Free Survival", mc["c_index_rfs"]),
+                    ("Perfect ceiling",       1.0),
+                ], color="#14b8a6"), unsafe_allow_html=True)
+            st.caption(f"C-index: 0.5 = random · 1.0 = perfect discrimination · Training set: {mc['train_size']:,} patients")
         else:
             st.warning("Model C metrics not available — re-run export_models.py")
 

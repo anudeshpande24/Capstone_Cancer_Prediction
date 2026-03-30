@@ -290,8 +290,8 @@ p, li, div, small, .stMarkdown, .stText {
     color: rgba(255,255,255,0.85) !important;
 }
 
-/* ── Buttons ──────────────────────────────────────────────────────────────── */
-.main .stFormSubmitButton button, .main .stButton button {
+/* ── Buttons (general) ────────────────────────────────────────────────────── */
+.main .stButton button {
     background: #f43f7a !important;
     color: #ffffff !important;
     border: none !important;
@@ -303,11 +303,43 @@ p, li, div, small, .stMarkdown, .stText {
     box-shadow: 0 4px 16px rgba(244,63,122,0.35) !important;
     transition: background 0.2s, box-shadow 0.2s, transform 0.15s !important;
 }
-.main .stFormSubmitButton button:hover, .main .stButton button:hover {
+.main .stButton button:hover {
     background: #e11d68 !important;
     box-shadow: 0 6px 22px rgba(244,63,122,0.5) !important;
     transform: translateY(-1px) !important;
     color: #ffffff !important;
+}
+
+/* ── Form submit buttons (Run …) ──────────────────────────────────────────── */
+[data-testid="stFormSubmitButton"] {
+    display: flex !important;
+    justify-content: flex-start !important;
+    margin-top: 10px !important;
+}
+[data-testid="stFormSubmitButton"] > button {
+    background: rgba(244,63,122,0.08) !important;
+    color: #f9a8c9 !important;
+    -webkit-text-fill-color: #f9a8c9 !important;
+    border: 1.5px solid rgba(244,63,122,0.45) !important;
+    border-radius: 100px !important;
+    font-weight: 600 !important;
+    font-size: 0.78rem !important;
+    padding: 0.65rem 2.6rem !important;
+    letter-spacing: 0.1em !important;
+    text-transform: uppercase !important;
+    width: auto !important;
+    min-width: 180px !important;
+    backdrop-filter: blur(8px) !important;
+    box-shadow: 0 0 18px rgba(244,63,122,0.12), inset 0 0 12px rgba(244,63,122,0.06) !important;
+    transition: all 0.2s ease !important;
+}
+[data-testid="stFormSubmitButton"] > button:hover {
+    background: rgba(244,63,122,0.2) !important;
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+    border-color: rgba(244,63,122,0.85) !important;
+    box-shadow: 0 0 32px rgba(244,63,122,0.4), inset 0 0 16px rgba(244,63,122,0.1) !important;
+    transform: translateY(-2px) !important;
 }
 
 /* ── Dataframe ────────────────────────────────────────────────────────────── */
@@ -387,6 +419,30 @@ p, li, div, small, .stMarkdown, .stText {
 .result-medium    .result-dot { background: #fbbf24; box-shadow: 0 0 10px rgba(251,191,36,0.5); }
 .result-low       { border-left: 4px solid #4ade80; color: #86efac !important; -webkit-text-fill-color: #86efac !important; }
 .result-low       .result-dot { background: #4ade80; box-shadow: 0 0 10px rgba(74,222,128,0.5); }
+
+/* ── Metric glossary ──────────────────────────────────────────────────────── */
+.metric-glossary {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 12px 0 20px;
+}
+.metric-glossary span {
+    background: rgba(255,255,255,0.04) !important;
+    border: 1px solid rgba(255,255,255,0.07) !important;
+    border-radius: 8px !important;
+    padding: 8px 14px !important;
+    font-size: 0.78rem !important;
+    color: rgba(255,255,255,0.6) !important;
+    -webkit-text-fill-color: rgba(255,255,255,0.6) !important;
+    line-height: 1.5 !important;
+    flex: 1 1 280px;
+}
+.metric-glossary span strong {
+    color: #f9a8c9 !important;
+    -webkit-text-fill-color: #f9a8c9 !important;
+    font-weight: 600 !important;
+}
 
 /* ── Model header ─────────────────────────────────────────────────────────── */
 .model-header {
