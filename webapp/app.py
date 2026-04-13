@@ -10,7 +10,7 @@ import plotly.graph_objects as go
 from utils.data_loader import load_wbcd, load_metabric, api_health
 from utils.theme import inject_theme
 
-st.set_page_config(page_title="BreastCare Decision Support", page_icon="🩺", layout="wide")
+st.set_page_config(page_title="BC DecisionPoint", page_icon="🩺", layout="wide")
 inject_theme()
 
 API = "http://localhost:8000"
@@ -143,7 +143,7 @@ st.markdown(
     f'<div style="display:flex;align-items:flex-start;justify-content:space-between;'
     f'flex-wrap:wrap;gap:12px;margin-bottom:8px;">'
     f'  <div>'
-    f'    <p class="page-title">BreastCare Decision Support</p>'
+    f'    <p class="page-title">BC-DecisionPoint</p>'
     f'    <p class="page-sub">Interpretable prediction platform supporting clinical '
     f'decision-making in breast cancer care.</p>'
     f'  </div>'
@@ -516,7 +516,7 @@ elif page == "Diagnosis":
 
                 # Patient report download
                 buf = io.StringIO()
-                buf.write("BreastCare Decision Support — Patient Report\n")
+                buf.write("BC-DecisionPoint — Patient Report\n")
                 buf.write("=" * 50 + "\n")
                 buf.write(f"Timestamp : {ts_str}\n")
                 buf.write(f"Model     : Diagnosis (Calibrated Random Forest)\n\n")
@@ -616,7 +616,7 @@ elif page == "Risk Stratification":
 
                 # Patient report download
                 buf = io.StringIO()
-                buf.write("BreastCare Decision Support — Patient Report\n")
+                buf.write("BC-DecisionPoint — Patient Report\n")
                 buf.write("=" * 50 + "\n")
                 buf.write(f"Timestamp : {ts_str}\n")
                 buf.write(f"Model     : Risk Stratification (XGBoost)\n\n")
@@ -730,7 +730,7 @@ elif page == "Survival Analysis":
 
                 # Patient report download
                 buf = io.StringIO()
-                buf.write("BreastCare Decision Support — Patient Report\n")
+                buf.write("BC-DecisionPoint — Patient Report\n")
                 buf.write("=" * 50 + "\n")
                 buf.write(f"Timestamp : {ts_str}\n")
                 buf.write(f"Model     : Survival Analysis (Cox Proportional Hazards)\n\n")

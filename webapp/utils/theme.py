@@ -13,7 +13,7 @@ html, body, [class*="css"] {
     padding: 2rem 2.5rem 4rem 2.5rem !important;
     max-width: 1280px;
 }
-#MainMenu, footer { visibility: hidden; }
+#MainMenu, footer, [data-testid="stToolbar"] { visibility: hidden; }
 [data-testid="stHeader"] { background: transparent !important; }
 
 /* ── Sidebar ──────────────────────────────────────────────────────────────── */
