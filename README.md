@@ -177,45 +177,6 @@ The app will be available at `http://localhost:8501`.
 
 ---
 
-## Project Structure
-
-```
-Capstone_Cancer_Prediction/
-├── data/
-│   ├── WBCD_dataset.csv
-│   ├── clean_WBCD.csv
-│   ├── Breast Cancer METABRIC.csv
-│   └── clean_metabric.csv
-├── eda/
-│   ├── wbcd_exploration.ipynb
-│   └── metabric_exploration.ipynb
-├── models/
-│   ├── binary_classification.ipynb
-│   ├── risk.ipynb
-│   ├── survival_analysis.ipynb
-│   ├── model_a.pkl
-│   ├── model_b.pkl
-│   └── model_c.pkl
-├── webapp/
-│   ├── app.py
-│   ├── backend/
-│   │   ├── main.py
-│   │   ├── model_loader.py
-│   │   └── routers/
-│   │       ├── predict.py
-│   │       └── data.py
-│   ├── utils/
-│   │   ├── data_loader.py
-│   │   └── theme.py
-│   └── .streamlit/
-│       └── config.toml
-├── export_models.py
-├── requirements.txt
-└── README.md
-```
-
----
-
 ## Assumptions & Limitations
 
 - Missing data in METABRIC is handled via imputation within model pipelines; records with missing survival time are excluded from survival model training only
@@ -223,4 +184,3 @@ Capstone_Cancer_Prediction/
 - The Cox proportional hazards assumption (constant hazard ratio over time) is not formally tested; violations would silently bias survival estimates
 - `Overall Survival Months` is excluded from risk stratification features to prevent data leakage
 - C-index values of 0.636–0.658 represent moderate discriminative ability; the survival model is informative at the population level but not highly precise for individual patients
-- Prediction history within the app is session-scoped and resets on page refresh — no data is stored server-side
