@@ -132,18 +132,6 @@ The BreastCare Decision Support Tool is a fully interactive web application buil
 | **Model Metrics** | View model performance — animated metric bars, color-coded confusion matrices, and plain-English metric glossaries for all three models. |
 | **Cohort Comparison** | Enter two patient profiles side by side, compare risk stratification results, and overlay their OS and RFS survival curves on a single interactive Plotly chart. |
 
-### Architecture
-
-```
-Streamlit Frontend (localhost:8501)
-        ↓  HTTP REST (JSON)
-FastAPI Backend (localhost:8000)
-        ↓  joblib.load()
-Model Bundles (.pkl) — model_a.pkl · model_b.pkl · model_c.pkl
-```
-
-Each `.pkl` bundle contains the trained model, feature names, feature statistics, label maps, encoders, and evaluation metrics — everything needed for inference and display.
-
 ---
 
 ## How to Run
