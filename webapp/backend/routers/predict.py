@@ -158,27 +158,38 @@ def shap_diagnosis(req: FeaturesRequest):
         X_scaled = scaler.transform(X)
 
         explainer = shap.TreeExplainer(rf)
-        shap_vals = explainer.shap_values(X_scaled)
+        shap_output = explainer.shap_values(X_scaled)
 
-        # Handle SHAP >= 0.41 Explanation object
-        if hasattr(shap_vals, "values"):
-            raw = shap_vals.values  # shape: (n_samples, n_features) or (n_samples, n_features, n_classes)
-            if raw.ndim == 3:
-                vals = raw[0, :, 1]  # malignant class
-            else:
-                vals = raw[0]
-        elif isinstance(shap_vals, list):
-            # older SHAP: list of arrays per class
-            vals = np.array(shap_vals[1][0])
+        # Normalize to a plain numpy array regardless of SHAP version
+        if hasattr(shap_output, "values"):
+            raw = np.asarray(shap_output.values, dtype=float)
+        elif isinstance(shap_output, list):
+            # Older SHAP: list of one array per class — take class 1 (malignant)
+            raw = np.asarray(shap_output[1] if len(shap_output) > 1 else shap_output[0], dtype=float)
         else:
-            vals = np.array(shap_vals[0])
+            raw = np.asarray(shap_output, dtype=float)
 
-        vals = np.array(vals, dtype=float)
+        # Squeeze size-1 dimensions, then reduce to shape (n_features,)
+        raw = np.squeeze(raw)
+        if raw.ndim == 2:
+            # Could be (n_features, n_classes) or (n_classes, n_features)
+            if raw.shape[0] == 2:
+                vals = raw[1]        # (2, 30) -> take malignant row
+            elif raw.shape[1] == 2:
+                vals = raw[:, 1]     # (30, 2) -> take malignant column
+            else:
+                vals = raw[0]        # unexpected shape; take first row
+        elif raw.ndim == 1:
+            vals = raw
+        else:
+            vals = raw.flatten()[:len(features)]
+
+        vals = np.asarray(vals, dtype=float).flatten()[:len(features)]
         abs_vals = np.abs(vals)
         top_indices = np.argsort(abs_vals)[::-1][:10]
 
         result = [
-            {"feature": features[i], "shap_value": round(float(vals[i]), 6)}
+            {"feature": features[int(i)], "shap_value": round(float(vals[int(i)]), 6)}
             for i in top_indices
         ]
         return {"shap_values": result}
